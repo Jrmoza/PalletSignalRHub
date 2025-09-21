@@ -136,7 +136,7 @@ namespace PalletSignalRHub.Hubs
             {
                 await Clients.Client(connectionId).SendAsync("BicolorPalletProcessed", tripId, bicolorPallet, deviceId);
                 _logger.LogInformation("🎨 Pallet bicolor procesado enviado al móvil - Trip: {TripId}, Device: {DeviceId}",
-                                     tripId, deviceId);
+                     tripId, deviceId);
             }
             else
             {
@@ -285,6 +285,29 @@ namespace PalletSignalRHub.Hubs
             }
 
             _logger.LogInformation("✅ Sincronización inicial completada para cliente {ConnectionId}", Context.ConnectionId);
+        }
+        // NUEVO: Método para solicitar lista de embalajes bicolor  
+        public async Task RequestBicolorPackagingTypes(string deviceId)
+        {
+            _deviceConnections[deviceId] = Context.ConnectionId;
+            _logger.LogInformation("📱 Solicitud de tipos de embalaje bicolor desde: {DeviceId}", deviceId);
+
+            // Reenviar solicitud a la aplicación de escritorio  
+            await Clients.All.SendAsync("BicolorPackagingTypesRequested", deviceId);
+        }
+
+        // NUEVO: Método para enviar lista de embalajes bicolor al móvil  
+        public async Task SendBicolorPackagingTypesToMobile(string deviceId, object packagingTypesList)
+        {
+            if (_deviceConnections.TryGetValue(deviceId, out string? connectionId))
+            {
+                await Clients.Client(connectionId).SendAsync("BicolorPackagingTypesReceived", packagingTypesList);
+                _logger.LogInformation("📋 Lista de embalajes bicolor enviada al móvil - Device: {DeviceId}", deviceId);
+            }
+            else
+            {
+                _logger.LogWarning("⚠️ Dispositivo no encontrado para envío de embalajes bicolor: {DeviceId}", deviceId);
+            }
         }
     }
 }
