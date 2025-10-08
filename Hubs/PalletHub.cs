@@ -295,7 +295,14 @@ namespace PalletSignalRHub.Hubs
             // Reenviar solicitud a la aplicación de escritorio  
             await Clients.All.SendAsync("BicolorPackagingTypesRequested", deviceId);
         }
-
+        public async Task SendPalletInfoToMobile(string tripId, string infoMessage, string deviceId)
+        {
+            if (_deviceConnections.TryGetValue(deviceId, out string? connectionId))
+            {
+                await Clients.Client(connectionId).SendAsync("PalletInfoMessage", tripId, infoMessage);
+                _logger.LogInformation("ℹ️ Mensaje informativo enviado al móvil - Device: {DeviceId}", deviceId);
+            }
+        }
         // NUEVO: Método para enviar lista de embalajes bicolor al móvil  
         public async Task SendBicolorPackagingTypesToMobile(string deviceId, object packagingTypesList)
         {
