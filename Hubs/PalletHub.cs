@@ -309,7 +309,7 @@ namespace PalletSignalRHub.Hubs
                 _logger.LogWarning("⚠️ Dispositivo no encontrado para envío de embalajes bicolor: {DeviceId}", deviceId);
             }
         }
-        // Agregar en Hubs/PalletHub.cs  VERSIO DE VERSION PARA MEJORA MODULOS OK
+        // Agregar en Hubs/PalletHub.cs  VERSIO DE VERSION PARA MEJORA MODULOS OK.
         public async Task SendPalletInfoToMobile(string tripId, string infoMessage, string deviceId)
         {
             if (_deviceConnections.TryGetValue(deviceId, out string? connectionId))
