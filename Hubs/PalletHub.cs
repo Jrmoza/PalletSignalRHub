@@ -15,6 +15,8 @@ namespace PalletSignalRHub.Hubs
             _logger = logger;
         }
         // AGREGAR este método al PalletHub.cs  
+
+
         public async Task SendPalletListToMobile(string deviceId, object palletsData)
         {
             if (_deviceConnections.TryGetValue(deviceId, out string? connectionId))
@@ -323,5 +325,69 @@ namespace PalletSignalRHub.Hubs
                 _logger.LogWarning("⚠️ Dispositivo no encontrado para mensaje informativo: {DeviceId}", deviceId);
             }
         }
+        // ============================================================================  
+        // NUEVOS MÉTODOS PARA MÓDULO TESTEADOR  
+        // ============================================================================  
+
+        /// <summary>  
+        /// Móvil (Testeador) solicita información completa de un pallet desde Packing_SJP  
+        /// </summary>  
+        public async Task RequestPalletInfo(string palletNumber, string deviceId)
+        {
+            _deviceConnections[deviceId] = Context.ConnectionId;
+            _logger.LogInformation("🔍 [Testeador] Solicitud de info de pallet {PalletNumber} desde dispositivo {DeviceId}",
+                                  palletNumber, deviceId);
+
+            // Broadcast a todos los clientes de escritorio conectados  
+            await Clients.Others.SendAsync("OnPalletInfoRequested", palletNumber, deviceId);
+        }
+
+        /// <summary>  
+        /// Escritorio envía información del pallet al móvil solicitante (Testeador)  
+        /// </summary>  
+        public async Task SendPalletInfoToMobileTesteador(string palletDataJson, string deviceId, bool success, string errorMessage = "")
+        {
+            if (_deviceConnections.TryGetValue(deviceId, out string? connectionId))
+            {
+                await Clients.Client(connectionId).SendAsync("OnPalletInfoReceived", palletDataJson, success, errorMessage);
+                _logger.LogInformation("📤 [Testeador] Info de pallet enviada a dispositivo {DeviceId}, Success: {Success}",
+                                      deviceId, success);
+            }
+            else
+            {
+                _logger.LogWarning("⚠️ [Testeador] Dispositivo no encontrado para envío de info: {DeviceId}", deviceId);
+            }
+        }
+
+        /// <summary>  
+        /// Móvil (Testeador) solicita eliminación de un pallet de Packing_SJP  
+        /// </summary>  
+        public async Task RequestPalletDeletion(string palletNumber, string deviceId)
+        {
+            _deviceConnections[deviceId] = Context.ConnectionId;
+            _logger.LogInformation("🗑️ [Testeador] Solicitud de eliminación de pallet {PalletNumber} desde dispositivo {DeviceId}",
+                                  palletNumber, deviceId);
+
+            // Broadcast a escritorio para que procese la eliminación  
+            await Clients.Others.SendAsync("OnPalletDeletionRequested", palletNumber, deviceId);
+        }
+
+        /// <summary>  
+        /// Escritorio confirma resultado de eliminación al móvil (Testeador)  
+        /// </summary>  
+        public async Task SendDeletionResultToMobile(string palletNumber, string deviceId, bool success, string message)
+        {
+            if (_deviceConnections.TryGetValue(deviceId, out string? connectionId))
+            {
+                await Clients.Client(connectionId).SendAsync("OnPalletDeletionResult", palletNumber, success, message);
+                _logger.LogInformation("✅ [Testeador] Resultado de eliminación de {PalletNumber} enviado a {DeviceId}: {Success} - {Message}",
+                                      palletNumber, deviceId, success, message);
+            }
+            else
+            {
+                _logger.LogWarning("⚠️ [Testeador] Dispositivo no encontrado para resultado de eliminación: {DeviceId}", deviceId);
+            }
+        }
+
     }
 }
